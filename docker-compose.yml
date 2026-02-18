@@ -32,6 +32,9 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=supersecret
     networks:
      - internalnet
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo 'db.runCommand({ ping: 1 }).ok' | mongosh --quiet"]
+      start_period: 30s
 
   nodeapp:
     container_name: vuln_nodejs_app
@@ -57,8 +60,10 @@ services:
       MONGODB_ADMINUSERNAME: vuln_nodejs_app
       MONGODB_ADMINPASSWORD: supersecret
     depends_on:
-      - mysqldb
-      - mongodb
+      mysqldb:
+        condition: service_started
+      mongodb:
+        condition: service_healthy
     networks:
       - internalnet
 
