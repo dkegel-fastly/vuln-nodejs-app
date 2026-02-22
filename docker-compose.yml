@@ -19,6 +19,12 @@ services:
       SERVICE_NAME: mysqldb
     networks:
       - internalnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   mongodb:
     image: mongo
@@ -61,7 +67,7 @@ services:
       MONGODB_ADMINPASSWORD: supersecret
     depends_on:
       mysqldb:
-        condition: service_started
+        condition: service_healthy
       mongodb:
         condition: service_healthy
     networks:
