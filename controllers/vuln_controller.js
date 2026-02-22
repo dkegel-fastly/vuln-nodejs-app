@@ -520,11 +520,16 @@ const mongodb_save_notes_post = (req, res) => {
     if (err) {
       console.log(err);
       res.status(500).send('Internal error!');
+      return;
     }
     dbo = db.db('vuln_nodejs_app');
     dbo.collection('mongodb-notes').insertOne(noteObj, (err, result) => {
-      if (err) return res.status(500).send('Internal error!');
+      if (err) {
+        db.close();
+        return res.status(500).send('Internal error!');
+      }
       res.send({'success': 'true'});
+      db.close();
     });
   });
 };
@@ -536,8 +541,10 @@ const mongodb_show_notes_post = (req, res) => {
     db.collection('mongodb-notes').find({username: req.body.username}).toArray()
         .then((notes) => {
           res.send(notes);
+          client.close();
         }).catch((err) => {
           res.status(500).send('Internal error!');
+          client.close();
         });
   });
 };
@@ -698,10 +705,15 @@ const secret_post = (req, res) => {
     const db = client.db('vuln_nodejs_app');
     db.collection('secret').find({$where: 'this.password ==\''+req.body.password+'\''}).toArray()
         .then((secret) => {
-          if (secret.length == 0) return res.status(403).send('Incorrect password!');
+          if (secret.length == 0) {
+            client.close();
+            return res.status(403).send('Incorrect password!');
+          }
           res.send(secret[0].flag);
+          client.close();
         }).catch((err) => {
           res.status(500).send('Internal server error!');
+          client.close();
         });
   });
 };
